@@ -16,3 +16,10 @@ comment][code-origin].
 ## Installation
 
     $ dotnet tool install dotnet-nuget-gc -g
+
+## Usage
+
+    $ dotnet nuget-gc [minimum-days]
+
+* `minimum-days`. Number of days a package must not be used in order to be
+  purged from the cache. Defaults to `30`.
