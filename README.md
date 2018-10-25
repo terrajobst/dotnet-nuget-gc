@@ -19,7 +19,11 @@ comment][code-origin].
 
 ## Usage
 
-    $ dotnet nuget-gc [minimum-days]
+    $ dotnet nuget-gc [-f|--force] [MINIMUM-DAYS]
 
-* `minimum-days`. Number of days a package must not be used in order to be
+where:
+
+* `MINIMUM-DAYS`. Number of days a package must not be used in order to be
   purged from the cache. Defaults to `30`.
+* `-f`, `--force`. Performs the actual clean-up. Default is to do a dry-run
+  and report the clean-up that would be done.
