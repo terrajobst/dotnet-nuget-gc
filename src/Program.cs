@@ -31,7 +31,7 @@ namespace NugetCacheCleaner
 
             var tail = args.Except(flags);
             var minDays = int.TryParse(tail.FirstOrDefault(), out var n) ? n : 30;
-            string nugetcache = $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}\\.nuget\\packages\\";
+            string nugetcache = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
             DirectoryInfo info = new DirectoryInfo(nugetcache);
             long totalDeleted = 0;
             foreach (var folder in info.GetDirectories())
