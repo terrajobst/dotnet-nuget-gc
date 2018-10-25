@@ -7,8 +7,6 @@ This `dotnet` extension is designed to clean-up the NuGet cache. It's a
 policy][nuget-issue]. Code written by [@dotmorten] as outlined in [his
 comment][code-origin].
 
-[![](docs/thumbnail.png)](https://www.youtube.com/watch?v=2nNJly4uim0)
-
 [@dotmorten]: https://githun.com/dotMorten
 [nuget-issue]: https://github.com/NuGet/Home/issues/4980
 [code-origin]: https://github.com/NuGet/Home/issues/4980#issuecomment-432512640
