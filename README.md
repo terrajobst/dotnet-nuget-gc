@@ -4,7 +4,7 @@
 
 This `dotnet` extension is designed to clean-up the NuGet cache. It's a
 (hopefully) temporary workaround for the [missing cache-expiration
-policy][nuget-issue] Code written by [@dotmorten] as outlined in [his
+policy][nuget-issue]. Code written by [@dotmorten] as outlined in [his
 comment][code-origin].
 
 [![](docs/thumbnail.png)](https://www.youtube.com/watch?v=2nNJly4uim0)
