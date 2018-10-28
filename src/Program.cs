@@ -17,7 +17,7 @@ namespace NugetCacheCleaner
             var options = new OptionSet {
                 {"f|force", "Performs the actual clean-up. Default is to do a dry-run and report the clean-up that would be done.", v => force = v != null},
                 {"m|min-days=", "Number of days a package must not be used in order to be purged from the cache. Defaults to 30.", v => minDays = ParseDays(v)},
-                { "?|h|help", "show this message and exit", v => showHelp = v != null },
+                { "?|h|help", "Show this message.", v => showHelp = v != null },
             };
 
             List<string> extra;
@@ -38,7 +38,7 @@ namespace NugetCacheCleaner
             }
 
             var totalDeleted = CleanCache(force, minDays);
-            var mbDeleted = (totalDeleted / 1024d / 1024d).ToString("0");
+            var mbDeleted = (totalDeleted / 1024d / 1024d).ToString("N0");
 
             if (force)
             {
@@ -46,17 +46,17 @@ namespace NugetCacheCleaner
             }
             else
             {
-                Console.WriteLine($"{mbDeleted} MB worth of packages are older than {minDays.TotalDays:N0} days and would be deleted.");
-                Console.WriteLine("Re-run with -f or --force flag to really delete.");
+                Console.WriteLine($"{mbDeleted} MB worth of packages are older than {minDays.TotalDays:N0} days.");
+                Console.WriteLine("To delete, re-run with -f or --force flag.");
             }
         }
 
-        private static void ShowHelp(OptionSet p)
+        private static void ShowHelp(OptionSet optionSet)
         {
             Console.WriteLine("usage: dotnet nuget-gc [options]");
             Console.WriteLine();
             Console.WriteLine("Options:");
-            p.WriteOptionDescriptions (Console.Out);
+            optionSet.WriteOptionDescriptions (Console.Out);
         }
 
         private static TimeSpan ParseDays(string text)
