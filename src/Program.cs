@@ -46,8 +46,8 @@ namespace NugetCacheCleaner
             }
             else
             {
-                Console.WriteLine($"{mbDeleted} MB worth of packages are older than {minDays.TotalDays:N0} days and would be deleted.");
-                Console.WriteLine("Re-run with -f or --force flag to really delete.");
+                Console.WriteLine($"{mbDeleted} MB worth of packages are older than {minDays.TotalDays:N0} days.");
+                Console.WriteLine("To delete, re-run with -f or --force flag.");
             }
         }
 
