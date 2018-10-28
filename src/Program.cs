@@ -38,7 +38,7 @@ namespace NugetCacheCleaner
             }
 
             var totalDeleted = CleanCache(force, minDays);
-            var mbDeleted = (totalDeleted / 1024d / 1024d).ToString("0");
+            var mbDeleted = (totalDeleted / 1024d / 1024d).ToString("N0");
 
             if (force)
             {
