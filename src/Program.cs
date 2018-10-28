@@ -51,12 +51,12 @@ namespace NugetCacheCleaner
             }
         }
 
-        private static void ShowHelp(OptionSet p)
+        private static void ShowHelp(OptionSet optionSet)
         {
             Console.WriteLine("usage: dotnet nuget-gc [options]");
             Console.WriteLine();
             Console.WriteLine("Options:");
-            p.WriteOptionDescriptions (Console.Out);
+            optionSet.WriteOptionDescriptions (Console.Out);
         }
 
         private static TimeSpan ParseDays(string text)
