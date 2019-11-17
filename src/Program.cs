@@ -73,31 +73,38 @@ namespace NugetCacheCleaner
             var nugetCachePath = Path.Join(userProfilePath, ".nuget", "packages");
             var nugetCache = new DirectoryInfo(nugetCachePath);
             var totalDeleted = 0L;
-            foreach (var folder in nugetCache.GetDirectories())
+            if (!nugetCache.Exists)
             {
-                foreach (var versionFolder in folder.GetDirectories())
+                Console.WriteLine($"Warning: Missing nuget package folder: {nugetCache.FullName}");
+            }
+            else
+            {
+                foreach (var folder in nugetCache.GetDirectories())
                 {
-                    var files = versionFolder.GetFiles("*.*", SearchOption.AllDirectories);
-                    if (files.Length == 0)
+                    foreach (var versionFolder in folder.GetDirectories())
                     {
-                        Delete(versionFolder, force, withLockCheck: false);
-                        continue;
-                    }
-                    var size = files.Sum(f => f.Length);
-                    var lastAccessed = DateTime.Now - files.Max(f => f.LastAccessTime);
-                    if (lastAccessed > minDays)
-                    {
-                        Console.WriteLine($"{versionFolder.FullName} last accessed {Math.Floor(lastAccessed.TotalDays)} days ago");
-                        try
+                        var files = versionFolder.GetFiles("*.*", SearchOption.AllDirectories);
+                        if (files.Length == 0)
                         {
-                            Delete(versionFolder, force, withLockCheck: true);
-                            totalDeleted += size;
+                            Delete(versionFolder, force, withLockCheck: false);
+                            continue;
                         }
-                        catch { }
+                        var size = files.Sum(f => f.Length);
+                        var lastAccessed = DateTime.Now - files.Max(f => f.LastAccessTime);
+                        if (lastAccessed > minDays)
+                        {
+                            Console.WriteLine($"{versionFolder.FullName} last accessed {Math.Floor(lastAccessed.TotalDays)} days ago");
+                            try
+                            {
+                                Delete(versionFolder, force, withLockCheck: true);
+                                totalDeleted += size;
+                            }
+                            catch { }
+                        }
                     }
+                    if (folder.GetDirectories().Length == 0)
+                        Delete(folder, force, withLockCheck: false);
                 }
-                if (folder.GetDirectories().Length == 0)
-                    Delete(folder, force, withLockCheck: false);
             }
 
             return totalDeleted;
