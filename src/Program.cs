@@ -84,6 +84,11 @@ namespace NugetCacheCleaner
                     foreach (var versionFolder in folder.GetDirectories())
                     {
                         var files = versionFolder.GetFiles("*.*", SearchOption.AllDirectories);
+                        if (files.Length == 0)
+                        {
+                            Delete(versionFolder, force, withLockCheck: false);
+                            continue;
+                        }
                         var size = files.Sum(f => f.Length);
                         var lastAccessed = DateTime.Now - files.Max(f => f.LastAccessTime);
                         if (lastAccessed > minDays)
