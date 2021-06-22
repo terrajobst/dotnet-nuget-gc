@@ -25,4 +25,6 @@ comment][code-origin].
                                  done.
       -m, --min-days=VALUE       Number of days a package must not be used in order
                                  to be purged from the cache. Defaults to 90.
+      -p, --prune                prune older versions of packages regardless of age
       -?, -h, --help             show this message and exit
+
