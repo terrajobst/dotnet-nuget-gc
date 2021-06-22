@@ -56,7 +56,10 @@ namespace NugetCacheCleaner
             }
             else
             {
-                Console.WriteLine($"{mbDeleted} MB worth of packages are older than {minDays.TotalDays:N0} days.");
+                if (prune)
+                    Console.WriteLine($"{mbDeleted} MB worth of packages are older than {minDays.TotalDays:N0} days or are not the latest version.");
+                else
+                    Console.WriteLine($"{mbDeleted} MB worth of packages are older than {minDays.TotalDays:N0} days.");
                 Console.WriteLine("To delete, re-run with -f or --force flag.");
             }
         }
@@ -84,67 +87,96 @@ namespace NugetCacheCleaner
             var nugetCache = new DirectoryInfo(nugetCachePath);
             var totalDeleted = 0L;
 
+            var deleted = new HashSet<DirectoryInfo>();
+            
             void CleanPackageDirectory(DirectoryInfo dir)
             {
-                var versions = new Dictionary<NuGetVersion, DirectoryInfo>();
-                foreach (var versionDir in dir.GetDirectories())
+                DirectoryInfo versionDir;
+                FileInfo[] versionDirFiles;
+
+                long DeleteVersion(bool withLockCheck = false)
                 {
-                    var files = versionDir.GetFiles("*.*", SearchOption.AllDirectories);
-                    if (files.Length == 0)
+                    try
                     {
-                        Delete(versionDir, force, withLockCheck: false);
-                        continue;
+                        var size = versionDirFiles.Sum(f => f.Length);
+                        DeleteDir(versionDir, force, withLockCheck);
+                        deleted.Add(versionDir);
+                        totalDeleted += size;
                     }
-                    if (!NuGetVersion.TryParse(versionDir.Name, out var version))
+                    catch (FileNotFoundException)
+                    {
+                        // ok
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        Console.WriteLine($"Warning: Not authorized to delete {versionDir.FullName}.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Deleting {versionDir.FullName} encountered {ex.GetType().Name}: {ex.Message}");
+                    }
+                    return totalDeleted;
+                }
+                
+                var versions = new Dictionary<NuGetVersion, DirectoryInfo>();
+                deleted.Clear();
+                foreach (var subDir in dir.GetDirectories())
+                {
+                    if (!NuGetVersion.TryParse(subDir.Name, out var version))
                     {
                         //Delete(versionFolder, force, withLockCheck: false);
-                        Console.WriteLine($"Warning: Skipping non-version format directory {versionDir.FullName}.");
+                        Console.WriteLine($"Warning: Skipping non-version format directory {subDir.FullName}.");
                         continue;
                     }
-                    versions.Add(version, versionDir);
-                    var size = files.Sum(f => f.Length);
-                    var lastAccessed = DateTime.UtcNow - files.Max(GetLastAccessed);
-                    if (lastAccessed > minDays)
-                    {
-                        Console.WriteLine($"{versionDir.FullName} last accessed {Math.Floor(lastAccessed.TotalDays)} days ago");
-                        try
-                        {
-                            Delete(versionDir, force, withLockCheck: true);
-                            totalDeleted += size;
-                        }
-                        catch (FileNotFoundException)
-                        {
-                            // ok
-                        }
-                        catch (UnauthorizedAccessException)
-                        {
-                            Console.WriteLine($"Warning: Not authorized to delete {versionDir.FullName}.");
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Warning: Deleting {versionDir.FullName} encountered {ex.GetType().Name}: {ex.Message}");
-                        }
-                    }
+                    versions.Add(version, subDir);
                 }
+
                 if (prune)
                 {
+                    // keep newest release and newest prerelease (if newer than newest release)
                     var releases = versions.Keys.Where(v => !v.IsPrerelease).ToArray();
                     var newestRelease = releases.Any() ? releases.Max() : null;
                     var prereleases = versions.Keys.Where(v => v > newestRelease && v.IsPrerelease).ToArray();
                     var newestPrerelease = prereleases.Any() ? prereleases.Max() : null;
+                    
                     foreach (var versionedDir in versions)
                     {
                         if (versionedDir.Key == newestRelease) continue;
                         if (versionedDir.Key == newestPrerelease) continue;
-                        var versionDir = versionedDir.Value;
-                        var files = versionDir.GetFiles("*.*", SearchOption.AllDirectories);
-                        var size = files.Sum(f => f.Length);
-                        Delete(versionDir, force, withLockCheck: false);
-                        totalDeleted += size;
+                        versionDir = versionedDir.Value;
+                        if (deleted.Contains(versionDir)) continue;
+                        versionDirFiles = versionDir.GetFiles("*.*", SearchOption.AllDirectories);
+                        totalDeleted += DeleteVersion(false);
+                    }
+                    
+                    foreach (var deletedDir in deleted)
+                    {
+                        var parsedVersion = versions.First(k => k.Value == deletedDir).Key;
+                        versions.Remove(parsedVersion);
                     }
                 }
+
+                foreach (var versionedDir in versions)
+                {
+                    versionDir = versionedDir.Value;
+                    versionDirFiles = versionDir.GetFiles("*.*", SearchOption.AllDirectories);
+                    if (versionDirFiles.Length == 0)
+                    {
+                        DeleteDir(versionDir, force, withLockCheck: false);
+                        continue;
+                    }
+
+                    var lastAccessed = DateTime.UtcNow - versionDirFiles.Max(GetLastAccessed);
+                    
+                    if (lastAccessed <= minDays)
+                        continue;
+                    
+                    Console.WriteLine($"{versionDir.FullName} last accessed {Math.Floor(lastAccessed.TotalDays)} days ago");
+                    
+                    totalDeleted = DeleteVersion(true);
+                }
                 if (dir.GetDirectories().Length == 0)
-                    Delete(dir, force, withLockCheck: false);
+                    DeleteDir(dir, force, withLockCheck: false);
             }
 
             if (!nugetCache.Exists)
@@ -178,7 +210,7 @@ namespace NugetCacheCleaner
             }
         }
 
-        private static void Delete(DirectoryInfo dir, bool force, bool withLockCheck)
+        private static void DeleteDir(DirectoryInfo dir, bool force, bool withLockCheck)
         {
             if (!force)
             {
