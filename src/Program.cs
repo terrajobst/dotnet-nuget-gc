@@ -12,11 +12,11 @@ namespace NugetCacheCleaner
         {
             var force = false;
             var showHelp = false;
-            var minDays = TimeSpan.FromDays(30);
+            var minDays = TimeSpan.FromDays(90);
 
             var options = new OptionSet {
                 {"f|force", "Performs the actual clean-up. Default is to do a dry-run and report the clean-up that would be done.", v => force = v != null},
-                {"m|min-days=", "Number of days a package must not be used in order to be purged from the cache. Defaults to 30.", v => minDays = ParseDays(v)},
+                {"m|min-days=", "Number of days a package must not be used in order to be purged from the cache. Defaults to 90.", v => minDays = ParseDays(v)},
                 { "?|h|help", "Show this message.", v => showHelp = v != null },
             };
 
@@ -90,7 +90,7 @@ namespace NugetCacheCleaner
                             continue;
                         }
                         var size = files.Sum(f => f.Length);
-                        var lastAccessed = DateTime.Now - files.Max(f => f.LastAccessTime);
+                        var lastAccessed = DateTime.UtcNow - files.Max(GetLastAccessed);
                         if (lastAccessed > minDays)
                         {
                             Console.WriteLine($"{versionFolder.FullName} last accessed {Math.Floor(lastAccessed.TotalDays)} days ago");
@@ -99,7 +99,18 @@ namespace NugetCacheCleaner
                                 Delete(versionFolder, force, withLockCheck: true);
                                 totalDeleted += size;
                             }
-                            catch { }
+                            catch (FileNotFoundException)
+                            {
+                                // ok
+                            }
+                            catch (UnauthorizedAccessException)
+                            {
+                                Console.WriteLine($"Warning: Not authorized to delete {versionFolder.FullName}.");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Warning: Deleting {versionFolder.FullName} encountered {ex.GetType().Name}: {ex.Message}");
+                            }
                         }
                     }
                     if (folder.GetDirectories().Length == 0)
@@ -108,6 +119,18 @@ namespace NugetCacheCleaner
             }
 
             return totalDeleted;
+        }
+
+        private static DateTime GetLastAccessed(FileInfo f)
+        {
+            try
+            {
+                return DateTime.FromFileTimeUtc(Math.Max(f.LastAccessTimeUtc.ToFileTimeUtc(), f.LastWriteTimeUtc.ToFileTimeUtc()));
+            }
+            catch
+            {
+                return f.LastWriteTimeUtc;
+            }
         }
 
         private static void Delete(DirectoryInfo dir, bool force, bool withLockCheck)
