@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnet-nuget-gc", "src\dotnet-nuget-gc.csproj", "{A9AB4F95-C775-462A-8A49-62E3E701A119}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{D4DADB7C-5D3B-4C0A-8874-B6FE59008936}"
+ProjectSection(SolutionItems) = preProject
+	LICENSE = LICENSE
+	README.md = README.md
+EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A9AB4F95-C775-462A-8A49-62E3E701A119}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9AB4F95-C775-462A-8A49-62E3E701A119}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9AB4F95-C775-462A-8A49-62E3E701A119}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9AB4F95-C775-462A-8A49-62E3E701A119}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
